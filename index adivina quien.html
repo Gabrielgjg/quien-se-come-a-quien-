@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Quién se come a quién?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --anil:#22307b; --anil-2:#18225c; --papel:#fff8ea; --tinta:#1c1a17;
+  --rosa:#d1006c; --cempa:#f2a900; --verde:#2f8f4e; --naranja:#e4661a; --rojo:#c3241c;
+  --display:'Alfa Slab One', Rockwell, 'Roboto Slab', Georgia, serif;
+  --texto:'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--anil);color:var(--papel);font-family:var(--texto);font-size:17px;line-height:1.45;min-height:100vh;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.picado{height:30px;background:
+  conic-gradient(from -45deg at 50% 100%, var(--rosa) 90deg, transparent 0) 0 0/36px 100%,
+  linear-gradient(var(--cempa),var(--cempa)) 0 0/100% 6px no-repeat}
+.pantalla{display:none;max-width:1180px;margin:0 auto;padding:18px 16px 40px}
+.pantalla.activa{display:block}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0 0 .4em;line-height:1.1}
+h1{font-size:clamp(2.2rem,7vw,4rem);letter-spacing:.5px}
+h2{font-size:clamp(1.4rem,4vw,2rem)}
+p{margin:0 0 .8em;max-width:65ch}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--cempa);outline-offset:3px}
+.btn{font-family:var(--display);font-size:1.05rem;background:var(--cempa);color:var(--tinta);border:3px solid var(--tinta);
+  border-radius:6px;padding:.65em 1.15em;box-shadow:4px 4px 0 var(--tinta);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--tinta)}
+.btn.sec{background:var(--papel)}
+.btn.rosa{background:var(--rosa);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.liga{background:none;border:0;text-decoration:underline;cursor:pointer;padding:6px;color:var(--papel)}
+.hoja{background:var(--papel);color:var(--tinta);border:3px solid var(--tinta);border-radius:8px;padding:16px}
+.fila{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+label.campo{display:flex;flex-direction:column;gap:4px;font-weight:700;flex:1 1 200px}
+input[type=text],input[type=url],select{font:inherit;padding:10px 12px;border:2px solid var(--tinta);border-radius:6px;background:#fff;color:var(--tinta);width:100%}
+.muted{opacity:.75;font-size:.92rem}
+
+/* Inicio */
+.portada{display:grid;gap:20px;margin-top:10px}
+@media(min-width:900px){.portada{grid-template-columns:1.1fr 1fr;align-items:start}}
+.lema{font-size:1.15rem;max-width:40ch}
+.niveles-guia{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.nv{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;border:2px solid var(--tinta);color:var(--tinta);font-weight:700;font-size:.92rem}
+.ecos{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin:8px 0 4px}
+.eco{background:#fff;border:2px solid var(--tinta);border-radius:6px;padding:10px 8px;cursor:pointer;text-align:center;color:var(--tinta)}
+.eco .e{font-size:1.9rem;display:block}
+.eco .n{font-family:var(--display);font-size:.88rem;display:block;line-height:1.15}
+.eco .c{font-size:.78rem;opacity:.7}
+.eco[aria-pressed=true]{background:var(--cempa);box-shadow:3px 3px 0 var(--tinta)}
+.seg{display:inline-flex;border:2px solid var(--tinta);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:8px 16px;cursor:pointer;color:var(--tinta);font-weight:700}
+.seg button+button{border-left:2px solid var(--tinta)}
+.seg button[aria-pressed=true]{background:var(--tinta);color:var(--papel)}
+.grupo-titulo{font-weight:700;margin:16px 0 4px}
+
+/* Juego */
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip{background:var(--anil-2);border:2px solid var(--papel);border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
+.hud .eco-tit{font-family:var(--display);font-size:1.3rem;margin-right:auto}
+.juego{display:grid;gap:16px}
+@media(min-width:900px){.juego{grid-template-columns:1fr 390px;align-items:start}.panel{position:sticky;top:12px}}
+.tablero{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px}
+.carta{position:relative;aspect-ratio:3/4;background:var(--papel);border:3px solid var(--tinta);border-radius:6px;padding:7px 6px 6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;color:var(--tinta);transition:transform .2s}
+.carta::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--tinta);border-radius:3px;pointer-events:none}
+.carta .num{align-self:flex-start;font-family:var(--display);font-size:.8rem;padding-left:3px}
+.carta .emo{font-size:2.5rem;line-height:1}
+.carta .nom{font-family:var(--display);font-size:.74rem;text-align:center;line-height:1.1;background:var(--tinta);color:var(--papel);
+  width:100%;padding:4px 2px;border-radius:2px;min-height:2.3em;display:flex;align-items:center;justify-content:center}
+.carta.fuera{background:repeating-linear-gradient(45deg,var(--rosa) 0 8px,#b4005d 8px 16px);transform:scale(.95)}
+.carta.fuera>*{opacity:.22}
+.tablero-nota{margin:10px 0 0;font-size:.92rem;opacity:.85}
+.sabes{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;min-height:8px}
+.dato-chip{background:var(--papel);color:var(--tinta);border-radius:4px;padding:3px 9px;font-size:.88rem;font-weight:700;border-left:6px solid var(--verde)}
+.dato-chip.no{border-left-color:var(--rojo);text-decoration:line-through;text-decoration-thickness:2px}
+.tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.tabs button{flex:1 1 auto;border:2px solid var(--tinta);background:#fff;border-radius:6px;padding:7px 8px;cursor:pointer;font-weight:700;color:var(--tinta);font-size:.92rem}
+.tabs button[aria-selected=true]{background:var(--tinta);color:var(--papel)}
+.preg{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 11px;border:2px solid var(--tinta);
+  background:#fff;border-radius:6px;margin-bottom:6px;cursor:pointer;color:var(--tinta)}
+.preg .costo{font-size:.78rem;font-weight:700;white-space:nowrap;background:var(--cempa);border-radius:999px;padding:2px 8px}
+.preg .costo.doble{background:var(--rosa);color:#fff}
+.preg.si{background:#dcf1e2;cursor:default}
+.preg.no{background:#f6dcda;cursor:default}
+.preg .resp{font-family:var(--display);font-size:.95rem}
+.panel-pie{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.panel-pie .btn{flex:1}
+
+/* Diálogos */
+dialog{border:3px solid var(--tinta);border-radius:8px;background:var(--papel);color:var(--tinta);width:min(680px,94vw);max-height:90vh;padding:18px;overflow:auto}
+dialog::backdrop{background:rgba(16,22,64,.75)}
+dialog.respaldo{position:fixed;inset:0;margin:auto;height:fit-content;z-index:1000;display:block}
+#fondo-modal{position:fixed;inset:0;background:rgba(16,22,64,.75);z-index:999;display:none}
+#fondo-modal.visible{display:block}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin:8px 0 14px}
+.mini button{display:flex;align-items:center;gap:6px;border:2px solid var(--tinta);background:#fff;border-radius:6px;padding:6px 8px;cursor:pointer;text-align:left;font-size:.88rem;color:var(--tinta)}
+.mini button.fuera{opacity:.45}
+.mini button[aria-pressed=true]{background:var(--cempa);opacity:1;box-shadow:2px 2px 0 var(--tinta)}
+.niveles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px}
+.niveles button{border:3px solid var(--tinta);border-radius:6px;padding:10px;cursor:pointer;font-family:var(--display);font-size:.95rem;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.niveles button[aria-pressed=true]{outline:4px solid var(--tinta);outline-offset:2px}
+.niveles button[aria-pressed=false]{opacity:.7}
+
+/* Resultado */
+.revela{display:grid;gap:18px;margin-top:8px}
+@media(min-width:760px){.revela{grid-template-columns:240px 1fr;align-items:start}}
+.carta.grande{cursor:default;max-width:240px;width:100%}
+.carta.grande .emo{font-size:5rem}
+.carta.grande .nom{font-size:1.05rem}
+.banda{color:#fff;font-family:var(--display);padding:6px 12px;border-radius:4px;display:inline-block;margin-bottom:10px}
+.cuentas{width:100%;border-collapse:collapse;margin:10px 0}
+.cuentas td{padding:5px 0;border-bottom:1px dashed rgba(0,0,0,.25)}
+.cuentas td:last-child{text-align:right;font-weight:700}
+.cuentas tr.total td{border-bottom:0;font-family:var(--display);font-size:1.25rem;padding-top:10px}
+.ok{color:var(--verde)} .mal{color:var(--rojo)}
+.tabla-rank{width:100%;border-collapse:collapse;font-size:.95rem}
+.tabla-rank th,.tabla-rank td{padding:6px 6px;text-align:left;border-bottom:1px solid rgba(0,0,0,.15)}
+.tabla-rank th{font-size:.82rem}
+.tabla-rank td.n{text-align:right}
+.scroll-x{overflow-x:auto}
+.aviso{padding:8px 12px;border-radius:6px;background:#fff;border:2px dashed var(--tinta);margin:10px 0}
+.gran-num{font-family:var(--display);font-size:clamp(3rem,10vw,5rem);line-height:1;color:var(--cempa)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="picado" aria-hidden="true"></div>
+<div id="fondo-modal"></div>
+
+<!-- INICIO -->
+<section id="p-inicio" class="pantalla activa">
+  <div class="portada">
+    <div>
+      <h1>¿Quién se come a quién?</h1>
+      <p class="lema">Hay un ser vivo escondido en el tablero. Haz preguntas, descarta cartas y descubre quién es y qué lugar ocupa en la red trófica.</p>
+      <div class="niveles-guia" id="guia-niveles"></div>
+      <div class="fila">
+        <button class="liga" data-abrir="d-ayuda">Cómo se juega</button>
+        <button class="liga" id="b-ranking-inicio">Ver ranking</button>
+      </div>
+    </div>
+    <div class="hoja">
+      <div class="fila">
+        <label class="campo">Tu nombre
+          <input type="text" id="i-nombre" maxlength="40" autocomplete="off" placeholder="Nombre y apellido">
+        </label>
+      </div>
+      <div class="fila" style="margin-top:10px">
+        <label class="campo">Secundaria
+          <input type="text" id="i-secundaria" maxlength="60" autocomplete="off" placeholder="Ej. Secundaria Técnica 45">
+        </label>
+        <label class="campo" style="flex:0 1 90px">Grado
+          <select id="i-grado"><option>1°</option><option>2°</option><option>3°</option></select>
+        </label>
+        <label class="campo" style="flex:0 1 90px">Grupo
+          <select id="i-letra"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select>
+        </label>
+      </div>
+      <p class="grupo-titulo">Rondas por partida</p>
+      <div class="seg" id="seg-rondas" role="group" aria-label="Rondas">
+        <button data-v="1" aria-pressed="false">1</button>
+        <button data-v="3" aria-pressed="true">3</button>
+        <button data-v="5" aria-pressed="false">5</button>
+      </div>
+      <p class="grupo-titulo">Ecosistema</p>
+      <div class="ecos" id="ecos"></div>
+      <p class="muted" id="nota-rondas">En partidas de 3 o 5 rondas, solo la primera es en el ecosistema que elijas; las demás son en ecosistemas al azar.</p>
+      <p class="muted" id="msg-inicio" role="status" style="color:var(--rojo);font-weight:700"></p>
+      <button class="btn" id="b-empezar" style="width:100%;margin-top:6px">Empezar partida</button>
+    </div>
+  </div>
+</section>
+
+<!-- JUEGO -->
+<section id="p-juego" class="pantalla">
+  <div class="hud">
+    <span class="eco-tit" id="h-eco"></span>
+    <span class="chip" id="h-ronda"></span>
+    <span class="chip" id="h-tiempo" aria-live="off">⏱ 0:00</span>
+    <span class="chip" id="h-pistas">🔎 0 pistas</span>
+  </div>
+  <div class="juego">
+    <div>
+      <div class="sabes" id="sabes" aria-live="polite"></div>
+      <div class="tablero" id="tablero"></div>
+      <p class="tablero-nota">Toca una carta para descartarla (o para regresarla si te equivocaste).</p>
+    </div>
+    <div class="panel hoja">
+      <h3>Pregunta</h3>
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div id="preguntas"></div>
+      <div class="panel-pie">
+        <button class="btn rosa" id="b-adivinar">¡Ya sé!</button>
+        <button class="btn sec" id="b-rendirse">Rendirme</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTADO DE RONDA -->
+<section id="p-resultado" class="pantalla">
+  <h2 id="r-titulo"></h2>
+  <div class="revela">
+    <div id="r-carta"></div>
+    <div class="hoja">
+      <div id="r-banda"></div>
+      <p id="r-cientifico" style="font-style:italic;margin-bottom:4px"></p>
+      <p id="r-dato"></p>
+      <table class="cuentas" id="r-cuentas"></table>
+      <button class="btn" id="b-siguiente" style="width:100%"></button>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section id="p-final" class="pantalla">
+  <div class="portada">
+    <div>
+      <h2>Partida terminada</h2>
+      <div class="gran-num" id="f-total">0</div>
+      <p style="font-family:var(--display)">puntos</p>
+      <table class="cuentas" id="f-resumen" style="max-width:420px;color:var(--papel)"></table>
+      <div class="fila">
+        <button class="btn" id="b-enviar">Enviar al ranking</button>
+        <button class="btn sec" id="b-otra">Jugar otra vez</button>
+      </div>
+      <p id="f-msg" role="status" style="margin-top:12px"></p>
+    </div>
+    <div class="hoja">
+      <h3>Ranking</h3>
+      <div id="f-ranking"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIALOGO ADIVINAR -->
+<dialog id="d-adivinar" aria-labelledby="t-adivinar">
+  <h3 id="t-adivinar">¿Quién es y qué come?</h3>
+  <p class="muted">1. Elige el ser vivo escondido</p>
+  <div class="mini" id="a-opciones"></div>
+  <p class="muted">2. Elige su nivel trófico</p>
+  <div class="niveles" id="a-niveles"></div>
+  <div class="fila">
+    <button class="btn" id="b-confirmar" disabled>Confirmar respuesta</button>
+    <button class="btn sec" data-cerrar>Seguir preguntando</button>
+  </div>
+</dialog>
+
+<!-- DIALOGO RANKING -->
+<dialog id="d-ranking" aria-labelledby="t-ranking">
+  <h3 id="t-ranking">Ranking</h3>
+  <div id="rk-cuerpo"></div>
+  <button class="btn sec" data-cerrar style="margin-top:12px">Cerrar</button>
+</dialog>
+
+<!-- DIALOGO AYUDA -->
+<dialog id="d-ayuda" aria-labelledby="t-ayuda">
+  <h3 id="t-ayuda">Cómo se juega</h3>
+  <p>Al empezar cada ronda se esconde un ser vivo del ecosistema que elegiste. Todos los demás están en el tablero, como cartas de lotería.</p>
+  <p>Haz preguntas de sí o no. Con cada respuesta, toca las cartas que ya no pueden ser para descartarlas. Las preguntas sobre su forma y su vida cuestan 1 pista; las preguntas sobre su alimentación cuestan 2, porque te acercan más a la respuesta.</p>
+  <p>Cuando creas saberlo, toca «¡Ya sé!», elige el ser vivo y su nivel trófico:</p>
+  <p><b>Productor:</b> fabrica su propio alimento con la luz del Sol.<br>
+  <b>Consumidor primario:</b> come productores (plantas, algas, fitoplancton).<br>
+  <b>Consumidor secundario:</b> come a otros consumidores.<br>
+  <b>Superdepredador:</b> está en la cima de la red; de adulto casi nadie lo caza.</p>
+  <table class="cuentas">
+    <tr><td>Nivel trófico correcto</td><td>+600</td></tr>
+    <tr><td>Ser vivo correcto</td><td>+400</td></tr>
+    <tr><td>Cada pista usada</td><td>−25</td></tr>
+    <tr><td>Cada segundo</td><td>−2</td></tr>
+  </table>
+  <p class="muted">En el ranking gana quien junte más puntos; si hay empate, quien tardó menos.</p>
+  <button class="btn sec" data-cerrar>Entendido</button>
+</dialog>
+
+<!-- DIALOGO CONFIGURACION -->
+<dialog id="d-config" aria-labelledby="t-config">
+  <h3 id="t-config">Configuración del docente</h3>
+  <label class="campo">URL de la aplicación web de Apps Script
+    <input type="url" id="i-url" placeholder="https://script.google.com/macros/s/.../exec">
+  </label>
+  <div class="fila" style="margin:10px 0 18px">
+    <button class="btn" id="b-guardar-url">Guardar URL</button>
+    <button class="btn sec" id="b-probar-url">Probar conexión</button>
+  </div>
+  <p id="cfg-msg-url" class="muted" role="status"></p>
+  <h3>Seres vivos (CSV)</h3>
+  <p class="muted" id="cfg-resumen"></p>
+  <div class="fila">
+    <button class="btn sec" id="b-descargar-csv">Descargar CSV actual</button>
+    <label class="btn sec" style="display:inline-block">Cargar CSV
+      <input type="file" id="i-csv" accept=".csv,text/csv" hidden>
+    </label>
+    <button class="btn sec" id="b-restaurar">Restaurar originales</button>
+  </div>
+  <p id="cfg-msg-csv" class="muted" role="status" style="margin-top:10px"></p>
+  <button class="btn" data-cerrar style="margin-top:12px">Cerrar</button>
+</dialog>
+
+<script type="text/plain" id="datos-csv">
+eco,nombre,cientifico,emoji,nivel,animal,vertebrado,mamifero,ave,reptil,anfibio,pez,microscopico,grande,acuatico,vuela,nocturno,social,concha,espinas,veneno,flor,fotosintesis,come_plantas,come_animales,presa,dato
+selva,Ceiba,Ceiba pentandra,🌳,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,"Árbol sagrado para los mayas; de joven su tronco tiene espinas cónicas."
+selva,Bromelia,Tillandsia sp.,🌺,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,"Crece sobre las ramas de los árboles sin ser parásita y guarda agua entre sus hojas."
+selva,Helecho,Polypodiaceae,🌿,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,"No tiene flores ni semillas: se reproduce por esporas."
+selva,Tapir,Tapirus bairdii,🐾,C1,1,1,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,1,"Es el mamífero terrestre más grande de Mesoamérica y dispersa semillas al comer frutos."
+selva,Mono aullador,Alouatta pigra,🐒,C1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,"Su aullido se escucha a varios kilómetros de distancia."
+selva,Mariposa morfo,Morpho helenor,🦋,C1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,"El azul de sus alas no es pigmento: es luz reflejada por escamas microscópicas."
+selva,Guacamaya roja,Ara macao,🦜,C1,1,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,"Come semillas y frutos; en México sobrevive sobre todo en la Selva Lacandona."
+selva,Rana de ojos rojos,Agalychnis callidryas,🐸,C2,1,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"De día duerme pegada bajo las hojas; abre sus ojos rojos para asustar a los depredadores."
+selva,Nauyaca,Bothrops asper,🐍,C2,1,1,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,1,"Detecta el calor de sus presas con unas fosetas entre los ojos y la nariz."
+selva,Ocelote,Leopardus pardalis,🐈,C2,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"Cada ocelote tiene un patrón de manchas único, como una huella digital."
+selva,Jaguar,Panthera onca,🐆,S,1,1,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,"Es el felino más grande de América; su mordida puede perforar caparazones de tortuga."
+selva,Águila arpía,Harpia harpyja,🦅,S,1,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,"Sus garras son enormes; caza monos y perezosos en lo alto de los árboles."
+arrecife,Pasto marino,Thalassia testudinum,🌱,P,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,1,"No es un alga: es una planta con flores que vive bajo el mar."
+arrecife,Alga calcárea,Halimeda sp.,🍀,P,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,"Sus hojitas tienen calcio; al morir se vuelven parte de la arena blanca del Caribe."
+arrecife,Fitoplancton,Diatomeas y dinoflagelados,🦠,P,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,1,"Junto con el resto del plancton marino produce cerca de la mitad del oxígeno del planeta."
+arrecife,Pez loro,Sparisoma viride,🐠,C1,1,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,0,1,"Al raspar algas del coral muele piedra caliza y la convierte en arena."
+arrecife,Erizo de mar negro,Diadema antillarum,🐾,C1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,0,0,1,0,1,"Controla las algas; sin él, las algas pueden cubrir y asfixiar los corales."
+arrecife,Tortuga verde,Chelonia mydas,🐢,C1,1,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,0,1,0,1,"De adulta come casi solo pastos marinos y algas."
+arrecife,Caracol rosado,Aliger gigas,🐚,C1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,"Pasta algas del fondo; su concha rosada es tan buscada que hoy está protegido."
+arrecife,Pulpo maya,Octopus maya,🐙,C2,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,1,"Solo vive en la península de Yucatán y cambia de color en un instante."
+arrecife,Langosta espinosa,Panulirus argus,🦞,C2,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,0,0,0,1,1,"Migra en filas de decenas de individuos, uno detrás de otro."
+arrecife,Pargo,Lutjanus sp.,🐟,C2,1,1,0,0,0,0,1,0,0,1,0,1,1,0,0,0,0,0,0,1,1,"Muchos pargos se reúnen para desovar en los mismos lugares cada año."
+arrecife,Tiburón tigre,Galeocerdo cuvier,🦈,S,1,1,0,0,0,0,1,0,1,1,0,1,0,0,0,0,0,0,0,1,0,"Come de casi todo: tortugas, peces, aves marinas... y hasta basura."
+arrecife,Mero guasa,Epinephelus itajara,🐡,S,1,1,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,"Puede pesar más de 300 kg; está protegido porque fue sobrepescado."
+bosque,Oyamel,Abies religiosa,🌲,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,"Es el árbol donde la mariposa monarca pasa el invierno en Michoacán y el Estado de México."
+bosque,Encino,Quercus sp.,🌳,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,1,"México es el país con más especies de encino del mundo."
+bosque,Musgo,Bryophyta,🌱,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,"Retiene agua como una esponja y ayuda a evitar la erosión del suelo."
+bosque,Venado cola blanca,Odocoileus virginianus,🦌,C1,1,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,"Solo los machos tienen astas y las cambian cada año."
+bosque,Mariposa monarca,Danaus plexippus,🦋,C1,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,1,"Viaja miles de kilómetros desde Canadá; su sabor tóxico viene de la planta que come de oruga."
+bosque,Teporingo,Romerolagus diazi,🐇,C1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,"Solo vive en las faldas de los volcanes del centro de México y está en peligro de extinción."
+bosque,Gato montés,Lynx rufus,🐈,C2,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"Su cola es muy corta, como si estuviera cortada."
+bosque,Víbora de cascabel,Crotalus triseriatus,🐍,C2,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,"Su cascabel es de queratina y gana un segmento cada vez que muda de piel."
+bosque,Salamandra,Pseudoeurycea sp.,🦎,C2,1,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"No tiene pulmones: respira a través de su piel húmeda."
+bosque,Puma,Puma concolor,🐆,S,1,1,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,"Es el mamífero terrestre con la distribución más amplia de América."
+bosque,Lobo mexicano,Canis lupus baileyi,🐺,S,1,1,1,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,1,0,"Desapareció de la naturaleza en México y hoy se reintroduce en la Sierra Madre Occidental."
+desierto,Saguaro,Carnegiea gigantea,🌵,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,"Puede vivir más de 150 años y guardar toneladas de agua en su tallo."
+desierto,Biznaga,Ferocactus sp.,🌵,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,1,"Muchas biznagas están en riesgo porque se sacan ilegalmente para venderlas como adorno."
+desierto,Liquen,Hongo + alga,🪨,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,"Es la unión de un hongo y un alga: el alga hace fotosíntesis y el hongo la protege."
+desierto,Berrendo,Antilocapra americana sonoriensis,🦌,C1,1,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,"Es el mamífero más veloz de América: corre a casi 90 km/h."
+desierto,Rata canguro,Dipodomys sp.,🐭,C1,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,"Puede vivir sin beber agua: la obtiene de las semillas que come."
+desierto,Chapulín del desierto,Trimerotropis sp.,🦗,C1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,"Escucha con unos «oídos» que tiene en el abdomen."
+desierto,Tortuga del desierto,Gopherus morafkai,🐢,C1,1,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,"Pasa gran parte del año en madrigueras para escapar del calor."
+desierto,Monstruo de Gila,Heloderma suspectum,🦎,C2,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,"Es uno de los pocos lagartos venenosos del mundo y guarda grasa en su cola."
+desierto,Correcaminos,Geococcyx californianus,🐦,C2,1,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,"Corre a más de 30 km/h y es capaz de cazar serpientes de cascabel."
+desierto,Escorpión,Centruroides sp.,🦂,C2,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,1,"Brilla con luz azul verdosa bajo la luz ultravioleta."
+desierto,Zorra del desierto,Vulpes macrotis,🦊,C2,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"Sus orejas enormes le ayudan a perder calor y a oír presas bajo la arena."
+desierto,Puma,Puma concolor,🐆,S,1,1,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,"Es el mamífero terrestre con la distribución más amplia de América."
+desierto,Gavilán de Harris,Parabuteo unicinctus,🦅,S,1,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,0,"Caza en equipo, como una manada de lobos con alas."
+manglar,Mangle rojo,Rhizophora mangle,🌳,P,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,1,"Sus raíces en zancos protegen la costa de los huracanes y son guardería de peces."
+manglar,Mangle botoncillo,Conocarpus erectus,🌳,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,1,"Crece en la parte más seca del manglar, donde casi no llega la marea."
+manglar,Lechuga de mar,Ulva sp.,🥬,P,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,"Es un alga verde tan delgada que parece papel de china."
+manglar,Cangrejo violinista,Uca sp.,🦀,C1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,1,"El macho agita una tenaza gigante para atraer a las hembras."
+manglar,Ostión de mangle,Crassostrea rhizophorae,🦪,C1,1,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,1,0,1,"Vive pegado a las raíces del mangle y filtra el agua para comer fitoplancton."
+manglar,Manatí,Trichechus manatus,🐾,C1,1,1,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,"Puede comer cerca del 10% de su peso en plantas acuáticas al día."
+manglar,Lisa,Mugil cephalus,🐟,C1,1,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,0,1,"Suele saltar fuera del agua; nadie sabe con certeza por qué lo hace."
+manglar,Robalo,Centropomus undecimalis,🐟,C2,1,1,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,1,"Crece en manglares y lagunas, donde encuentra comida y refugio."
+manglar,Garza blanca,Ardea alba,🪶,C2,1,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,1,"Se queda inmóvil en el agua y atrapa peces con un picotazo rapidísimo."
+manglar,Cocodrilo de río,Crocodylus acutus,🐊,S,1,1,0,0,1,0,0,0,1,1,0,1,0,0,0,0,0,0,0,1,0,"Tolera el agua salada y puede medir más de 4 metros."
+manglar,Águila pescadora,Pandion haliaetus,🦅,S,1,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,"Se zambulle de patas para atrapar peces y los carga mirando al frente."
+rio,Tule,Typha sp.,🌾,P,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,1,"Con sus hojas se tejen petates y sillas desde tiempos prehispánicos."
+rio,Ahuehuete,Taxodium mucronatum,🌲,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,"Es el árbol nacional de México; el Árbol del Tule, en Oaxaca, es un ahuehuete."
+rio,Alga verde de río,Spirogyra sp.,🟢,P,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,"Forma hilos verdes y viscosos sobre piedras y charcas."
+rio,Acocil,Cambarellus montezumae,🦐,C1,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,1,0,1,"Es un crustáceo pequeñito que se come desde la época mexica."
+rio,Caracol de agua dulce,Physa sp.,🐌,C1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,"Raspa las algas de las piedras con una lengua llena de dientes llamada rádula."
+rio,Pato mexicano,Anas diazi,🦆,C1,1,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,"Vive en humedales de México y del suroeste de Estados Unidos."
+rio,Ajolote,Ambystoma mexicanum,🦎,C2,1,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,1,"Puede regenerar patas, cola y hasta partes de su corazón."
+rio,Charal,Chirostoma sp.,🐟,C2,1,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,1,1,"Es tan pequeño que se come entero, desde la época prehispánica."
+rio,Culebra de agua,Thamnophis sp.,🐍,C2,1,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,"Nada muy bien y caza peces, ranas y renacuajos."
+rio,Nutria de río,Lontra longicaudis,🦦,S,1,1,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,"Necesita ríos limpios: si hay nutrias, el agua está en buen estado."
+rio,Cocodrilo de pantano,Crocodylus moreletii,🐊,S,1,1,0,0,1,0,0,0,1,1,0,1,0,0,0,0,0,0,0,1,0,"Vive en ríos y lagunas del Golfo de México y la península de Yucatán."
+oceano,Fitoplancton,Diatomeas,🦠,P,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,1,"Es la base de casi todas las cadenas alimentarias del mar."
+oceano,Sargazo,Sargassum sp.,🟤,P,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,"Flota en enormes manchas; cuando llega en exceso a las playas del Caribe se vuelve un problema."
+oceano,Kelp gigante,Macrocystis pyrifera,🌿,P,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,1,"Forma bosques submarinos en Baja California y puede crecer medio metro en un día."
+oceano,Copépodo,Copepoda,🦐,C1,1,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,1,0,1,"Probablemente es el animal más abundante del planeta."
+oceano,Sardina del Pacífico,Sardinops sagax,🐟,C1,1,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,0,1,"Nada en cardúmenes de millones y filtra plancton del agua."
+oceano,Erizo morado,Strongylocentrotus purpuratus,🐾,C1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,0,0,1,0,1,"Si se vuelve demasiado abundante puede acabar con un bosque de kelp."
+oceano,Medusa,Scyphozoa,🪼,C2,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,1,"No tiene cerebro ni corazón; casi todo su cuerpo es agua."
+oceano,Ballena azul,Balaenoptera musculus,🐋,C2,1,1,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,"Es el animal más grande que ha existido y come kril: ¡es consumidora secundaria!"
+oceano,Calamar de Humboldt,Dosidicus gigas,🦑,C2,1,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0,1,1,"Le dicen «diablo rojo»: cambia de color y caza en grupo en el Golfo de California."
+oceano,Tiburón blanco,Carcharodon carcharias,🦈,S,1,1,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,"En la Isla Guadalupe, Baja California, vive una de sus poblaciones más estudiadas."
+oceano,Orca,Orcinus orca,🐋,S,1,1,1,0,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0,1,0,"Caza en manada y puede atacar incluso a tiburones blancos."
+pastizal,Pasto navajita,Bouteloua gracilis,🌾,P,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,"Sus raíces profundas sujetan el suelo y evitan las tolvaneras."
+pastizal,Mezquite,Prosopis sp.,🌳,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,"Sus vainas dulces se molían para hacer harina en el norte de México."
+pastizal,Gobernadora,Larrea tridentata,🌿,P,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,1,"Algunos de sus grupos de clones tienen miles de años de edad."
+pastizal,Perrito de la pradera,Cynomys ludovicianus,🐿️,C1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,"Sus colonias forman «pueblos» subterráneos con miles de individuos."
+pastizal,Bisonte,Bison bison,🦬,C1,1,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,"Desapareció de México y fue reintroducido en los pastizales de Janos, Chihuahua."
+pastizal,Chapulín,Sphenarium purpurascens,🦗,C1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,"En Oaxaca y otros estados se come tostado con limón y chile."
+pastizal,Hurón de patas negras,Mustela nigripes,🐾,C2,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,"Depende de los perritos de la pradera: los caza y vive en sus madrigueras."
+pastizal,Tecolote llanero,Athene cunicularia,🦉,C2,1,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,"Anida bajo tierra, a menudo en madrigueras abandonadas."
+pastizal,Serpiente toro,Pituophis catenifer,🐍,C2,1,1,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,"No es venenosa, pero cuando se siente amenazada imita a una cascabel."
+pastizal,Águila real,Aquila chrysaetos,🦅,S,1,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,"Es el ave del Escudo Nacional de México."
+pastizal,Coyote,Canis latrans,🐺,S,1,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,"Su nombre viene del náhuatl coyotl."
+</script>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+
+const ATTRS=[
+ {k:'animal',q:'¿Es un animal?',s:'Animal',c:1},
+ {k:'vertebrado',q:'¿Tiene columna vertebral?',s:'Vertebrado',c:1},
+ {k:'mamifero',q:'¿Es mamífero?',s:'Mamífero',c:1},
+ {k:'ave',q:'¿Es un ave?',s:'Ave',c:1},
+ {k:'reptil',q:'¿Es un reptil?',s:'Reptil',c:1},
+ {k:'anfibio',q:'¿Es un anfibio?',s:'Anfibio',c:1},
+ {k:'pez',q:'¿Es un pez?',s:'Pez',c:1},
+ {k:'microscopico',q:'¿Es microscópico o casi invisible a simple vista?',s:'Microscópico',c:1},
+ {k:'grande',q:'¿Mide más de 1 metro?',s:'Más de 1 m',c:1},
+ {k:'acuatico',q:'¿Vive principalmente dentro del agua?',s:'Vive en el agua',c:1},
+ {k:'vuela',q:'¿Puede volar?',s:'Vuela',c:1},
+ {k:'nocturno',q:'¿Es activo sobre todo de noche?',s:'Nocturno',c:1},
+ {k:'social',q:'¿Vive en grupos, manadas o colonias?',s:'Vive en grupo',c:1},
+ {k:'concha',q:'¿Tiene concha o caparazón duro?',s:'Concha o caparazón',c:1},
+ {k:'espinas',q:'¿Tiene espinas o púas?',s:'Espinas',c:1},
+ {k:'veneno',q:'¿Es venenoso o tóxico?',s:'Venenoso',c:1},
+ {k:'flor',q:'¿Produce flores?',s:'Flores',c:1},
+ {k:'fotosintesis',q:'¿Fabrica su alimento con la luz del Sol?',s:'Fotosíntesis',c:2},
+ {k:'come_plantas',q:'¿Come plantas, algas o semillas?',s:'Come plantas',c:2},
+ {k:'come_animales',q:'¿Come otros animales?',s:'Come animales',c:2},
+ {k:'presa',q:'¿Algún otro animal se lo come cuando es adulto?',s:'Tiene depredadores',c:2}
+];
+const ATTR=Object.fromEntries(ATTRS.map(a=>[a.k,a]));
+const PESTANAS=[
+ {id:'que',t:'¿Qué es?',ks:['animal','vertebrado','mamifero','ave','reptil','anfibio','pez','microscopico']},
+ {id:'como',t:'¿Cómo vive?',ks:['grande','acuatico','vuela','nocturno','social','concha','espinas','veneno','flor']},
+ {id:'come',t:'¿Qué come?',ks:['fotosintesis','come_plantas','come_animales','presa']}
+];
+const ECOS={
+ selva:{n:'Selva tropical',e:'🌴'}, arrecife:{n:'Arrecife de coral',e:'🪸'}, bosque:{n:'Bosque templado',e:'🌲'},
+ desierto:{n:'Desierto',e:'🌵'}, manglar:{n:'Manglar',e:'🌿'}, rio:{n:'Río y agua dulce',e:'🏞️'},
+ oceano:{n:'Océano abierto',e:'🌊'}, pastizal:{n:'Pastizal',e:'🌾'}
+};
+const NIVELES={
+ P:{n:'Productor',c:'#2f8f4e'}, C1:{n:'Consumidor primario',c:'#c98a00'},
+ C2:{n:'Consumidor secundario',c:'#e4661a'}, S:{n:'Superdepredador',c:'#c3241c'}
+};
+/* ====== CONFIGURACIÓN DEL DOCENTE ======
+   Pega aquí la URL /exec de tu Apps Script antes de subir a GitHub.
+   El panel de configuración no aparece en el juego; solo se abre agregando
+   ?docente al final de la dirección (ej. .../index.html?docente).            */
+const CONFIG={urlAppsScript:''};
+const PTS={nivel:600,organismo:400,pista:25,segundo:2};
+const LS={url:'qcq-url',records:'qcq-records',jugador:'qcq-jugador',csv:'qcq-csv'};
+const COLS=['eco','nombre','cientifico','emoji','nivel',...ATTRS.map(a=>a.k),'dato'];
+
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const azar=a=>a[Math.floor(Math.random()*a.length)];
+function barajar(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const mmss=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+
+/* ---------- CSV ---------- */
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,'');const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x.trim()))rows.push(row);row=[]}
+    else f+=c}
+  row.push(f);if(row.some(x=>x.trim()))rows.push(row);return rows}
+function aObjetos(rows){
+  if(rows.length<2)throw new Error('El archivo no tiene filas de datos.');
+  const h=rows[0].map(s=>s.trim().toLowerCase());
+  const faltan=['eco','nombre','nivel',...ATTRS.map(a=>a.k)].filter(k=>!h.includes(k));
+  if(faltan.length)throw new Error('Faltan columnas: '+faltan.join(', '));
+  return rows.slice(1).map((r,ix)=>{
+    const o={};h.forEach((k,j)=>o[k]=(r[j]||'').trim());
+    o.nivel=o.nivel.toUpperCase();
+    if(!NIVELES[o.nivel])throw new Error(`Fila ${ix+2}: el nivel «${o.nivel}» no es válido. Usa P, C1, C2 o S.`);
+    o.eco=o.eco.toLowerCase();
+    ATTRS.forEach(a=>{const v=(o[a.k]||'').toLowerCase();o[a.k]=(v==='1'||v==='si'||v==='sí')?1:0});
+    o.emoji=o.emoji||'🐾';o.id=ix;return o});
+}
+function aCSV(data){
+  const e=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  return [COLS.join(','),...data.map(o=>COLS.map(k=>e(o[k])).join(','))].join('\n');
+}
+function abrir(d){
+  if(typeof d.showModal==='function'){try{d.showModal();return}catch(e){}}
+  d.setAttribute('open','');d.classList.add('respaldo');$('#fondo-modal').classList.add('visible');
+}
+function cerrar(d){
+  if(typeof d.close==='function'){try{d.close()}catch(e){}}
+  d.removeAttribute('open');d.classList.remove('respaldo');$('#fondo-modal').classList.remove('visible');
+}
+let DATA=[];
+function cargarDatos(){
+  const propio=lsGet(LS.csv,null);
+  if(propio){try{DATA=aObjetos(parseCSV(propio));return 'propio'}catch(e){lsDel(LS.csv)}}
+  DATA=aObjetos(parseCSV($('#datos-csv').textContent.trim()));return 'original';
+}
+function metaEco(k){return ECOS[k]||{n:k.charAt(0).toUpperCase()+k.slice(1),e:'🗺️'}}
+function ecosDisponibles(){
+  const c={};DATA.forEach(o=>c[o.eco]=(c[o.eco]||0)+1);
+  return Object.keys(c).filter(k=>c[k]>=4).map(k=>({k,cnt:c[k]}));
+}
+
+/* ---------- Estado ---------- */
+let G=null, R=null, ecoElegido='aleatorio', rondasElegidas=3, timer=null;
+
+function mostrar(id){$$('.pantalla').forEach(p=>p.classList.toggle('activa',p.id===id));window.scrollTo(0,0)}
+
+/* ---------- Inicio ---------- */
+function pintarGuia(){
+  $('#guia-niveles').innerHTML=Object.values(NIVELES).map(n=>`<span class="nv" style="background:${n.c};color:#fff">${n.n}</span>`).join('');
+}
+function pintarEcos(){
+  const ecos=ecosDisponibles();
+  if(!ecos.some(e=>e.k===ecoElegido))ecoElegido='aleatorio';
+  const html=ecos.map(({k,cnt})=>{const m=metaEco(k);return `<button class="eco" data-eco="${esc(k)}" aria-pressed="${ecoElegido===k}"><span class="e">${m.e}</span><span class="n">${esc(m.n)}</span><span class="c">${cnt} seres vivos</span></button>`}).join('')
+   +`<button class="eco" data-eco="aleatorio" aria-pressed="${ecoElegido==='aleatorio'}"><span class="e">🎲</span><span class="n">Al azar</span><span class="c">ecosistema sorpresa</span></button>`;
+  $('#ecos').innerHTML=html;
+}
+$('#ecos').addEventListener('click',e=>{const b=e.target.closest('.eco');if(!b)return;ecoElegido=b.dataset.eco;pintarEcos()});
+$('#seg-rondas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;rondasElegidas=+b.dataset.v;
+  $$('#seg-rondas button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('#nota-rondas').hidden=rondasElegidas===1});
+
+$('#b-empezar').addEventListener('click',()=>{
+  const nombre=$('#i-nombre').value.trim();
+  if(nombre.length<2){$('#msg-inicio').textContent='Escribe tu nombre para aparecer en el ranking.';$('#i-nombre').focus();return}
+  const secundaria=$('#i-secundaria').value.trim();
+  if(secundaria.length<3){$('#msg-inicio').textContent='Escribe el nombre de tu secundaria.';$('#i-secundaria').focus();return}
+  $('#msg-inicio').textContent='';
+  const grupo=$('#i-grado').value+' '+$('#i-letra').value;
+  lsSet(LS.jugador,{nombre,secundaria,grado:$('#i-grado').value,letra:$('#i-letra').value});
+  G={nombre,secundaria,grupo,eco:ecoElegido,rondas:rondasElegidas,ronda:0,total:0,tiempo:0,pistas:0,okNivel:0,okOrg:0,usados:new Set(),ecos:[]};
+  nuevaRonda();
+});
+
+/* ---------- Ronda ---------- */
+function nuevaRonda(){
+  G.ronda++;
+  const disp=ecosDisponibles().map(e=>e.k);
+  let eco;
+  if(G.ronda===1)eco=G.eco==='aleatorio'?azar(disp):G.eco;
+  else{const nuevos=disp.filter(k=>!G.ecos.includes(k));const prev=G.ecos[G.ecos.length-1];
+    eco=azar(nuevos.length?nuevos:disp.filter(k=>k!==prev).length?disp.filter(k=>k!==prev):disp)}
+  const pool=DATA.filter(o=>o.eco===eco);
+  let cand=pool.filter(o=>!G.usados.has(o.id));if(!cand.length)cand=pool;
+  const secreto=azar(cand);G.usados.add(secreto.id);G.ecos.push(eco);
+  R={eco,tablero:barajar(pool),secreto,preguntas:{},pistas:0,fuera:new Set(),inicio:Date.now(),seg:0,tab:'que',sel:null,selNivel:null};
+  const m=metaEco(eco);
+  $('#h-eco').textContent=m.e+' '+m.n;
+  $('#h-ronda').textContent=`Ronda ${G.ronda} de ${G.rondas}`;
+  pintarTablero();pintarTabs();pintarPreguntas();pintarSabes();actualizarHud();
+  clearInterval(timer);timer=setInterval(()=>{R.seg=Math.floor((Date.now()-R.inicio)/1000);actualizarHud()},1000);
+  mostrar('p-juego');
+}
+function actualizarHud(){
+  $('#h-tiempo').textContent='⏱ '+mmss(R.seg);
+  $('#h-pistas').textContent='🔎 '+R.pistas+(R.pistas===1?' pista':' pistas');
+}
+function pintarTablero(){
+  $('#tablero').innerHTML=R.tablero.map((o,i)=>`<button class="carta${R.fuera.has(o.id)?' fuera':''}" data-id="${o.id}" aria-pressed="${R.fuera.has(o.id)}" aria-label="${esc(o.nombre)}${R.fuera.has(o.id)?' (descartado)':''}">
+    <span class="num">${i+1}</span><span class="emo" aria-hidden="true">${o.emoji}</span><span class="nom">${esc(o.nombre)}</span></button>`).join('');
+}
+$('#tablero').addEventListener('click',e=>{const b=e.target.closest('.carta');if(!b)return;const id=+b.dataset.id;
+  R.fuera.has(id)?R.fuera.delete(id):R.fuera.add(id);
+  const f=R.fuera.has(id);b.classList.toggle('fuera',f);b.setAttribute('aria-pressed',f);
+  b.setAttribute('aria-label',DATA[id].nombre+(f?' (descartado)':''))});
+function pintarTabs(){
+  $('#tabs').innerHTML=PESTANAS.map(p=>`<button role="tab" data-tab="${p.id}" aria-selected="${R.tab===p.id}">${p.t}</button>`).join('');
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;R.tab=b.dataset.tab;pintarTabs();pintarPreguntas()});
+function pintarPreguntas(){
+  const p=PESTANAS.find(x=>x.id===R.tab);
+  $('#preguntas').innerHTML=p.ks.map(k=>{const a=ATTR[k];const r=R.preguntas[k];
+    if(r!==undefined)return `<div class="preg ${r?'si':'no'}"><span>${a.q}</span><span class="resp">${r?'Sí':'No'}</span></div>`;
+    return `<button class="preg" data-k="${k}"><span>${a.q}</span><span class="costo${a.c>1?' doble':''}">${a.c} ${a.c>1?'pistas':'pista'}</span></button>`}).join('');
+}
+$('#preguntas').addEventListener('click',e=>{const b=e.target.closest('button.preg');if(!b)return;const k=b.dataset.k;
+  if(R.preguntas[k]!==undefined)return;
+  R.preguntas[k]=R.secreto[k]===1;R.pistas+=ATTR[k].c;
+  pintarPreguntas();pintarSabes();actualizarHud()});
+function pintarSabes(){
+  $('#sabes').innerHTML=Object.entries(R.preguntas).map(([k,v])=>`<span class="dato-chip${v?'':' no'}">${esc(ATTR[k].s)}</span>`).join('');
+}
+
+/* ---------- Adivinar ---------- */
+const dAdiv=$('#d-adivinar');
+$('#b-adivinar').addEventListener('click',()=>{
+  R.sel=null;R.selNivel=null;
+  const orden=R.tablero.slice().sort((a,b)=>R.fuera.has(a.id)-R.fuera.has(b.id));
+  $('#a-opciones').innerHTML=orden.map(o=>`<button data-id="${o.id}" class="${R.fuera.has(o.id)?'fuera':''}" aria-pressed="false"><span aria-hidden="true">${o.emoji}</span>${esc(o.nombre)}</button>`).join('');
+  $('#a-niveles').innerHTML=Object.entries(NIVELES).map(([k,n])=>`<button data-n="${k}" style="background:${n.c}" aria-pressed="false">${n.n}</button>`).join('');
+  $$('#a-niveles button').forEach(b=>b.removeAttribute('aria-pressed'));
+  $('#b-confirmar').disabled=true;
+  abrir(dAdiv);
+});
+$('#a-opciones').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;R.sel=+b.dataset.id;
+  $$('#a-opciones button').forEach(x=>x.setAttribute('aria-pressed',x===b));listo()});
+$('#a-niveles').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;R.selNivel=b.dataset.n;
+  $$('#a-niveles button').forEach(x=>x.setAttribute('aria-pressed',x===b));listo()});
+function listo(){$('#b-confirmar').disabled=!(R.sel!==null&&R.selNivel)}
+$('#b-confirmar').addEventListener('click',()=>{cerrar(dAdiv);terminarRonda(false)});
+let rendirT=null;
+$('#b-rendirse').addEventListener('click',e=>{const b=e.currentTarget;
+  if(b.dataset.seguro){clearTimeout(rendirT);b.textContent='Rendirme';delete b.dataset.seguro;terminarRonda(true);return}
+  b.dataset.seguro='1';b.textContent='¿Seguro? Toca otra vez';
+  rendirT=setTimeout(()=>{b.textContent='Rendirme';delete b.dataset.seguro},3000)});
+
+function terminarRonda(rendido){
+  clearInterval(timer);R.seg=Math.floor((Date.now()-R.inicio)/1000);
+  const s=R.secreto;
+  const okOrg=!rendido&&R.sel===s.id, okNivel=!rendido&&R.selNivel===s.nivel;
+  const bruto=(okNivel?PTS.nivel:0)+(okOrg?PTS.organismo:0);
+  const castigo=R.pistas*PTS.pista+R.seg*PTS.segundo;
+  const pts=bruto?Math.max(0,bruto-castigo):0;
+  G.total+=pts;G.tiempo+=R.seg;G.pistas+=R.pistas;G.okNivel+=okNivel?1:0;G.okOrg+=okOrg?1:0;
+  const n=NIVELES[s.nivel];
+  $('#r-titulo').textContent=rendido?'Era…':(okOrg&&okNivel?'¡Lo encontraste!':okNivel?'Nivel correcto, ser vivo equivocado':okOrg?'Ser vivo correcto, nivel equivocado':'Esta vez no');
+  $('#r-carta').innerHTML=`<div class="carta grande" style="border-color:${n.c}"><span class="num">${R.tablero.indexOf(s)+1}</span><span class="emo" aria-hidden="true">${s.emoji}</span><span class="nom">${esc(s.nombre)}</span></div>`;
+  $('#r-banda').innerHTML=`<span class="banda" style="background:${n.c}">${n.n}</span>`;
+  $('#r-cientifico').textContent=s.cientifico||'';
+  $('#r-dato').textContent=s.dato||'';
+  const tuya=rendido?'Te rendiste':`Elegiste: ${esc(DATA[R.sel].nombre)} como ${esc(NIVELES[R.selNivel].n.toLowerCase())}`;
+  $('#r-cuentas').innerHTML=`
+    <tr><td colspan="2" class="muted">${tuya}</td></tr>
+    <tr><td>Nivel trófico</td><td class="${okNivel?'ok':'mal'}">${okNivel?'+'+PTS.nivel:'0'}</td></tr>
+    <tr><td>Ser vivo</td><td class="${okOrg?'ok':'mal'}">${okOrg?'+'+PTS.organismo:'0'}</td></tr>
+    <tr><td>${R.pistas} pistas</td><td>${bruto?'−'+R.pistas*PTS.pista:'—'}</td></tr>
+    <tr><td>${mmss(R.seg)} de tiempo</td><td>${bruto?'−'+R.seg*PTS.segundo:'—'}</td></tr>
+    <tr class="total"><td>Ronda</td><td>${pts}</td></tr>
+    <tr><td>Acumulado</td><td>${G.total}</td></tr>`;
+  $('#b-siguiente').textContent=G.ronda<G.rondas?'Siguiente ronda':'Ver resultado final';
+  mostrar('p-resultado');
+}
+$('#b-siguiente').addEventListener('click',()=>{G.ronda<G.rondas?nuevaRonda():finalPartida()});
+
+/* ---------- Final y ranking ---------- */
+function registroPartida(){
+  const ecos=[...new Set(G.ecos)].map(k=>metaEco(k).n).join(', ');
+  return {nombre:G.nombre,secundaria:G.secundaria,grupo:G.grupo,ecosistemas:ecos,rondas:G.rondas,puntos:G.total,tiempo:G.tiempo,pistas:G.pistas,aciertosNivel:G.okNivel,aciertosOrganismo:G.okOrg};
+}
+function finalPartida(){
+  $('#f-total').textContent=G.total;
+  $('#f-resumen').innerHTML=`
+    <tr><td>Niveles tróficos correctos</td><td>${G.okNivel} de ${G.rondas}</td></tr>
+    <tr><td>Seres vivos correctos</td><td>${G.okOrg} de ${G.rondas}</td></tr>
+    <tr><td>Pistas usadas</td><td>${G.pistas}</td></tr>
+    <tr><td>Tiempo total</td><td>${mmss(G.tiempo)}</td></tr>`;
+  const reg=registroPartida();reg.fecha=new Date().toISOString();
+  const rec=lsGet(LS.records,[]);rec.push(reg);ordenar(rec);lsSet(LS.records,rec.slice(0,50));
+  G.enviado=false;
+  const url=urlRanking();
+  $('#b-enviar').disabled=!url;
+  $('#f-msg').textContent=url?'':'El ranking en línea no está disponible. Tu puntaje quedó guardado en este equipo.';
+  mostrar('p-final');
+  cargarRanking($('#f-ranking'));
+}
+function ordenar(a){return a.sort((x,y)=>(y.puntos-x.puntos)||(x.tiempo-y.tiempo)||(x.pistas-y.pistas))}
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+function tablaRanking(filas,titulo){
+  if(!filas.length)return `<p class="muted">${titulo}: todavía no hay puntajes. ¡Sé el primero!</p>`;
+  return `<p class="muted" style="margin-bottom:6px">${titulo}</p><div class="scroll-x"><table class="tabla-rank"><thead><tr><th>#</th><th>Nombre</th><th>Secundaria</th><th>Grupo</th><th class="n">Puntos</th><th class="n">Tiempo</th><th class="n">Pistas</th></tr></thead><tbody>`+
+   filas.slice(0,20).map((f,i)=>`<tr><td>${i+1}</td><td>${esc(f.nombre)}</td><td>${esc(f.secundaria)}</td><td>${esc(f.grupo)}</td><td class="n">${f.puntos}</td><td class="n">${mmss(+f.tiempo||0)}</td><td class="n">${f.pistas}</td></tr>`).join('')+
+   `</tbody></table></div>`;
+}
+function urlRanking(){return lsGet(LS.url,'')||CONFIG.urlAppsScript||''}
+async function cargarRanking(dest,soloMia){
+  const url=urlRanking();
+  const miSec=(lsGet(LS.jugador,{})||{}).secundaria||'';
+  const filtro=f=>!soloMia||norm(f.secundaria)===norm(miSec);
+  const sel=miSec?`<div class="seg" style="margin-bottom:10px" role="group" aria-label="Filtro del ranking">
+      <button data-f="todas" aria-pressed="${!soloMia}">Todas las secundarias</button>
+      <button data-f="mia" aria-pressed="${!!soloMia}">Solo la mía</button></div>`:'';
+  const montar=html=>{dest.innerHTML=sel+html;
+    dest.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>cargarRanking(dest,b.dataset.f==='mia'))};
+  const local=tablaRanking(ordenar(lsGet(LS.records,[]).filter(filtro)),'Mejores puntajes en este equipo');
+  if(!url){montar(local);return}
+  dest.innerHTML=sel+'<p class="muted">Cargando ranking en línea…</p>';
+  try{
+    const q='accion=ranking'+(soloMia?'&secundaria='+encodeURIComponent(miSec):'');
+    const r=await fetch(url+(url.includes('?')?'&':'?')+q);
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'respuesta inválida');
+    montar(tablaRanking(ordenar((j.filas||[]).filter(filtro)),soloMia?'Ranking de '+esc(miSec):'Ranking general'));
+  }catch(e){
+    montar(`<p class="aviso">No se pudo leer el ranking en línea; revisa tu conexión a internet.</p>`+local);
+  }
+}
+$('#b-enviar').addEventListener('click',async()=>{
+  if(G.enviado){$('#f-msg').textContent='Esta partida ya se envió.';return}
+  const url=urlRanking();if(!url)return;
+  const btn=$('#b-enviar');btn.disabled=true;$('#f-msg').textContent='Enviando…';
+  const body=JSON.stringify(registroPartida());
+  try{
+    const r=await fetch(url,{method:'POST',body});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'error');
+    G.enviado=true;$('#f-msg').textContent='Puntaje enviado al ranking.';
+  }catch(e){
+    try{await fetch(url,{method:'POST',body,mode:'no-cors'});G.enviado=true;
+      $('#f-msg').textContent='Puntaje enviado. Si no aparece en el ranking en unos segundos, avisa a tu profesor.';}
+    catch(e2){btn.disabled=false;$('#f-msg').textContent='No se pudo enviar. Revisa tu conexión a internet e inténtalo de nuevo.';}
+  }
+  cargarRanking($('#f-ranking'));
+});
+$('#b-otra').addEventListener('click',()=>{pintarEcos();mostrar('p-inicio')});
+$('#b-ranking-inicio').addEventListener('click',()=>{abrir($('#d-ranking'));cargarRanking($('#rk-cuerpo'))});
+
+/* ---------- Diálogos y configuración ---------- */
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-abrir]');if(a){const d=$('#'+a.dataset.abrir);if(d.id==='d-config')prepConfig();abrir(d)}
+  const c=e.target.closest('[data-cerrar]');if(c)cerrar(c.closest('dialog'));
+});
+function prepConfig(){
+  $('#i-url').value=urlRanking();
+  const ecos=ecosDisponibles();
+  $('#cfg-resumen').textContent=`${DATA.length} seres vivos en ${ecos.length} ecosistemas${lsGet(LS.csv,null)?' (datos cargados por ti)':' (datos originales)'}.`;
+  $('#cfg-msg-url').textContent='';$('#cfg-msg-csv').textContent='';
+}
+$('#b-guardar-url').addEventListener('click',()=>{
+  const u=$('#i-url').value.trim();
+  if(u&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){$('#cfg-msg-url').textContent='La URL debe empezar con https://script.google.com/';return}
+  u?lsSet(LS.url,u):lsDel(LS.url);
+  $('#cfg-msg-url').textContent=u?'URL guardada solo en este navegador. Para todos los alumnos, ponla en CONFIG dentro del código.':'Se usará la URL escrita en el código (si hay).';
+});
+$('#b-probar-url').addEventListener('click',async()=>{
+  const u=$('#i-url').value.trim();if(!u){$('#cfg-msg-url').textContent='Escribe primero la URL.';return}
+  $('#cfg-msg-url').textContent='Probando…';
+  try{const r=await fetch(u+(u.includes('?')?'&':'?')+'accion=ranking');const j=await r.json();
+    $('#cfg-msg-url').textContent=j.ok?`Conexión correcta: hay ${(j.filas||[]).length} registros en la hoja.`:'La app respondió con un error: '+(j.error||'desconocido');}
+  catch(e){$('#cfg-msg-url').textContent='Sin respuesta. Verifica que la app web esté implementada con acceso «Cualquier usuario».'}
+});
+$('#b-descargar-csv').addEventListener('click',()=>{
+  const blob=new Blob(['\uFEFF'+aCSV(DATA)],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='seres-vivos.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+});
+$('#i-csv').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const d=aObjetos(parseCSV(rd.result));
+      const eco=new Set(d.map(o=>o.eco));if(![...eco].some(k=>d.filter(o=>o.eco===k).length>=4))throw new Error('Cada ecosistema necesita al menos 4 seres vivos.');
+      DATA=d;lsSet(LS.csv,rd.result);pintarEcos();prepConfig();$('#cfg-msg-csv').textContent=`Listo: se cargaron ${d.length} seres vivos.`}
+    catch(err){$('#cfg-msg-csv').textContent='No se pudo cargar: '+err.message}
+    e.target.value=''};
+  rd.readAsText(f,'utf-8');
+});
+$('#b-restaurar').addEventListener('click',()=>{lsDel(LS.csv);cargarDatos();pintarEcos();prepConfig();$('#cfg-msg-csv').textContent='Se restauraron los datos originales.'});
+
+/* ---------- Arranque ---------- */
+cargarDatos();pintarGuia();pintarEcos();
+const j=lsGet(LS.jugador,null);
+if(j){$('#i-nombre').value=j.nombre||'';$('#i-secundaria').value=j.secundaria||'';
+  if(j.grado)$('#i-grado').value=j.grado;if(j.letra)$('#i-letra').value=j.letra}
+if(new URLSearchParams(location.search).has('docente')){prepConfig();abrir($('#d-config'))}
+})();
+</script>
+</body>
+</html>
